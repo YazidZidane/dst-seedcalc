@@ -1,0 +1,27 @@
+name: Run Python Script
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Miniconda environment
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-update-conda: true
+          python-version: '3.12.2'
+          activate-environment: my_env
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+          
+      - name: Run the Python script
+        run: python your_script.py
