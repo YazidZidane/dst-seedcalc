@@ -9,6 +9,8 @@ on:
 jobs:
   run-script:
     runs-on: ubuntu-latest
+    outputs:
+      artifact_name: generated-graphs
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
@@ -24,4 +26,12 @@ jobs:
         run: pip install -r requirements.txt
           
       - name: Run the Python script
-        run: python test_script.py
+        run: |
+          python test_script.py
+          python generate_plot.py
+      
+      - name: Upload generated graphs
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-graphs
+          path: graphs/
