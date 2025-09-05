@@ -35,3 +35,52 @@ jobs:
         with:
           name: generated-graphs
           path: graphs/
+
+  deploy-to-pages:
+    needs: run-script
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: generated-graphs
+      
+      - name: Create index.html for graphs
+        run: |
+          echo '<html>
+            <head>
+              <title>Generated Graphs</title>
+              <style>
+                body { font-family: sans-serif; margin: 2em; }
+                img { max-width: 100%; height: auto; display: block; margin-bottom: 2em; border: 1px solid #ccc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
+              </style>
+            </head>
+            <body>
+              <h1>Graphs from Last Run</h1>' > index.html
+          echo '<ul>' >> index.html
+          for file in generated-graphs/*; do
+            echo "<li><img src='/$(basename "$file")' alt='$(basename "$file")'></li>" >> index.html
+          done
+          echo '</ul></body></html>' >> index.html
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
+        with:
+          static_site_generator: false
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
