@@ -51,6 +51,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: generated-graphs
+          path: generated-graphs
       
       - name: Create index.html for graphs
         run: |
