@@ -65,9 +65,14 @@ jobs:
             <body>
               <h1>Graphs from Last Run</h1>' > index.html
           echo '<ul>' >> index.html
-          for file in generated-graphs/*; do
-            echo "<li><img src='/$(basename "$file")' alt='$(basename "$file")'></li>" >> index.html
-          done
+          if [ -d "generated-graphs" ]; then
+            for file in generated-graphs/*.png; do
+              # Ensure the file exists before creating a tag
+              if [ -f "$file" ]; then
+                echo "<li><img src='generated-graphs/$(basename "$file")' alt='$(basename "$file")'></li>" >> index.html
+              fi
+            done
+          fi
           echo '</ul></body></html>' >> index.html
 
       - name: Setup Pages
