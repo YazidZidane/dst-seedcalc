@@ -5,12 +5,13 @@ on:
     branches:
       - main
       - develop
+  
+  # Add the 'workflow_dispatch' event to manually trigger the workflow
+  workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    outputs:
-      artifact_name: generated-graphs
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
@@ -25,36 +26,19 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
           
-      - name: Run the Python script
+      - name: Run the Python script and create website files
         run: |
+
+          # Create a directory to hold the deployable website files
+          mkdir dist
+
           python test_script.py
           python generate_plot.py
-      
-      - name: Upload generated graphs
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-graphs
-          path: graphs/
 
-  deploy-to-pages:
-    needs: run-script
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+          # Move the generated graphs to the 'dist' directory
+          mv graphs/* dist/
 
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: generated-graphs
-          path: generated-graphs
-      
-      - name: Create index.html for graphs
-        run: |
+          # Create a simple index.html to display the graphs
           echo '<html>
             <head>
               <title>Generated Graphs</title>
@@ -64,33 +48,21 @@ jobs:
               </style>
             </head>
             <body>
-              <h1>Graphs from Last Run</h1>
-              <ul>' > index.html
-          
-          if [ -d "generated-graphs" ]; then
-            if [ -z "$(ls -A generated-graphs)" ]; then
-              echo "<li>No graphs found in the artifact.</li>" >> index.html
-            else
-              for file in generated-graphs/*.png; do
-                echo "<li><img src='generated-graphs/$(basename "$file")' alt='$(basename "$file")'></li>" >> index.html
-              done
-            fi
-          else
-            echo "<li>The 'generated-graphs' directory was not found.</li>" >> index.html
-          fi
-          echo '</ul></body></html>' >> index.html
-
-      - name: Setup Pages
-        id: pages
-        uses: actions/configure-pages@v4
+              <h1>Graphs from Last Run</h1>' > dist/index.html
+          echo '<ul>' >> dist/index.html
+          for file in dist/*.png; do
+            echo "<li><img src='/$(basename "$file")' alt='$(basename "$file")'></li>" >> dist/index.html
+          done
+          echo '</ul></body></html>' >> dist/index.html
+      
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
         with:
-          static_site_generator: false
-
-      - name: Upload artifact for Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          vercel-token: ${{ secrets.VERCEL_ACCESS_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # This is the key change!
+          working-directory: ./dist
+          # Deploy as a preview deployment for PRs
+          prod: false
