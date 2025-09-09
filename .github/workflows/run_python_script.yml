@@ -62,7 +62,4 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # This is the key change!
           working-directory: ./dist
-          # Deploy as a preview deployment for PRs
-          prod: false
