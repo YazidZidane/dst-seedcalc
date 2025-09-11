@@ -51,7 +51,7 @@ function populateDropdown() {
   historicalGraphs.forEach((url, index) => {
     const option = document.createElement('option');
     option.value = index;
-    option.textContent = `Graph ${index === 0 && historicalGraphs[index].startsWith('graphs/') ? '(Latest)' : index + 1}`;
+    option.textContent = `Graph ${index === 0 && historicalGraphs[index].startsWith('graphs/') ? '(Latest)' : index}`;
     graphSelect.appendChild(option);
   });
 }
