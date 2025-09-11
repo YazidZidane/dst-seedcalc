@@ -28,32 +28,19 @@ jobs:
           
       - name: Run the Python script and create website files
         run: |
+          # Create a directory to hold the deployable website files and graphs
+          mkdir -p dist/graphs
 
-          # Create a directory to hold the deployable website files
-          mkdir dist
-
+          # Run the Python scripts to generate graphs
           python test_script.py
           python generate_plot.py
 
-          # Move the generated graphs to the 'dist' directory
-          mv graphs/* dist/
+          # Move the generated graphs to the 'dist/graphs' directory
+          mv graphs/* dist/graphs/
 
-          # Create a simple index.html to display the graphs
-          echo '<html>
-            <head>
-              <title>Generated Graphs</title>
-              <style>
-                body { font-family: sans-serif; margin: 2em; }
-                img { max-width: 100%; height: auto; display: block; margin-bottom: 2em; border: 1px solid #ccc; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); }
-              </style>
-            </head>
-            <body>
-              <h1>Graphs from Last Run</h1>' > dist/index.html
-          echo '<ul>' >> dist/index.html
-          for file in dist/*.png; do
-            echo "<li><img src='/$(basename "$file")' alt='$(basename "$file")'></li>" >> dist/index.html
-          done
-          echo '</ul></body></html>' >> dist/index.html
+          # Create a JSON file with a list of the generated graph filenames
+          # The website's script.js will fetch this file
+          ls dist/graphs/*.png | xargs -n 1 basename | jq -R . | jq -s . > dist/graphs/graphs.json
       
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
