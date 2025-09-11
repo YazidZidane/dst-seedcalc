@@ -23,6 +23,11 @@ jobs:
         id: date
         run: echo "NOW=$(date +'%Y-%m-%d-%H-%M-%S')" >> "$GITHUB_ENV"
       
+      - name: Make a change to create a new commit
+        run: |
+          mkdir -p .github/temp
+          touch .github/temp/last-run-${{ env.NOW }}
+      
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
