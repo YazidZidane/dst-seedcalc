@@ -6,9 +6,11 @@ on:
       branch_name:
         description: 'The name of the new branch to create'
         required: false
+        default: 'automated-update'
       pr_title:
         description: 'The title for the new pull request'
         required: false
+        default: 'Automated daily update'
 
 jobs:
   create-pr:
@@ -19,7 +21,7 @@ jobs:
 
       - name: Get current date and time
         id: date
-        run: echo "NOW=$(date +'%Y/%m/%d-%H:%M:%S')" >> "$GITHUB_ENV"
+        run: echo "NOW=$(date +'%Y-%m-%d-%H-%M-%S')" >> "$GITHUB_ENV"
       
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
