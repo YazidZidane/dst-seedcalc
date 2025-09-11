@@ -6,11 +6,9 @@ on:
       branch_name:
         description: 'The name of the new branch to create'
         required: false
-        default: 'automated-update-${{ github.run_number }}'
       pr_title:
         description: 'The title for the new pull request'
         required: false
-        default: 'Automated daily update: ${{ github.event.repository.name }}'
 
 jobs:
   create-pr:
@@ -19,15 +17,19 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
+      - name: Get current date and time
+        id: date
+        run: echo "NOW=$(date +'%Y/%m/%d-%H:%M:%S')" >> "$GITHUB_ENV"
+      
       - name: Create pull request
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: 'feat: Automated daily update'
-          title: ${{ github.event.inputs.pr_title }}
+          title: '${{ github.event.inputs.pr_title }} - ${{ env.NOW }}'
           body: |
             This pull request was automatically created by a scheduled or manual workflow.
             
             It contains the daily updates for the repository.
-          branch: ${{ github.event.inputs.branch_name }}
+          branch: '${{ github.event.inputs.branch_name }}-${{ env.NOW }}'
           base: 'develop'
