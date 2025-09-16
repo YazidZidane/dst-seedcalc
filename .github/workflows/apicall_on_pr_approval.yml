@@ -1,0 +1,24 @@
+name: Call API on PR Approval
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  call-api:
+    if: github.event.review.state == 'approved' && contains(github.event.pull_request.labels.*.name, 'automated')
+    runs-on: [self-hosted, macOS, ARM64]
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Make API call
+        run: |
+          # Use curl to make a POST request with the required parameters
+          # The -d flag sends data as a key-value pair
+          # The github context provides details about the pull request and its review
+          curl -X POST http://localhost:3000/api/test \
+          -H "Content-Type: application/json" \
+          -d "{\"pr_id\": \"${{ github.event.pull_request.number }}\",
+           \"pr_branch\": \"${{ github.event.pull_request.head.ref }}\",
+            \"pr_comment\": \"${{ github.event.review.body }}\"}"
