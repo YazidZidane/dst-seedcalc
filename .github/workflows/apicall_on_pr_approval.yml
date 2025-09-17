@@ -14,14 +14,17 @@ jobs:
       
       - name: Make API call
         run: |
-          # Construct the full JSON payload using jq for safety and robustness
-          PAYLOAD=$(jq --null-input \
-            --arg pr_id "${{ github.event.pull_request.number }}" \
-            --arg pr_branch "${{ github.event.pull_request.head.ref }}" \
-            --argjson pr_comment "${{ github.event.pull_request.body }}" \
-            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_comment: $pr_comment}')
+          # The printf command handles multiline strings and special characters correctly
+          PAYLOAD=$(printf '{
+            "pr_id": "%s",
+            "pr_branch": "%s",
+            "pr_comment": "%s"
+          }' \
+          "${{ github.event.pull_request.number }}" \
+          "${{ github.event.pull_request.head.ref }}" \
+          "${{ github.event.pull_request.body }}")
           
-          # Use curl to make a POST request with the required parameters
+          # Use curl to make a POST request with the constructed payload
           curl -X POST http://localhost:3000/api/test \
           -H "Content-Type: application/json" \
           -d "$PAYLOAD"
