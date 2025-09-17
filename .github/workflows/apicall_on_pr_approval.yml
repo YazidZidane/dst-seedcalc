@@ -11,26 +11,6 @@ jobs:
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
-
-      # Step to extract the raw JSON from the pull request body's code block
-      - name: Extract JSON from PR body
-        id: extract_json
-        run: |
-          # We assume the PR body is a raw JSON string without markdown fences.
-          PR_BODY="${{ github.event.pull_request.body }}"
-          
-          # Check if the extracted content is valid JSON.
-          if [ -z "$PR_BODY" ]; then
-              echo "No JSON found in PR body. Using empty object."
-              echo "raw_json={}" >> "$GITHUB_OUTPUT"
-          elif echo "$PR_BODY" | jq -e . > /dev/null; then
-              echo "JSON successfully extracted and validated."
-              # Set the validated JSON as an output variable without delimiters.
-              echo "raw_json=$PR_BODY" >> "$GITHUB_OUTPUT"
-          else
-              echo "Error: Extracted content is not valid JSON. Using empty object."
-              echo "raw_json={}" >> "$GITHUB_OUTPUT"
-          fi
       
       - name: Make API call
         run: |
@@ -38,8 +18,8 @@ jobs:
           PAYLOAD=$(jq --null-input \
             --arg pr_id "${{ github.event.pull_request.number }}" \
             --arg pr_branch "${{ github.event.pull_request.head.ref }}" \
-            --argjson pr_data "${{ steps.extract_json.outputs.raw_json }}" \
-            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_data: $pr_data}')
+            --arg pr_comment "${{ github.event.pull_request.body }}" \
+            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_comment: $pr_comment}')
           
           # Use curl to make a POST request with the required parameters
           curl -X POST http://localhost:3000/api/test \
