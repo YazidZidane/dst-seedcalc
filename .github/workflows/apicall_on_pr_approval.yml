@@ -21,4 +21,4 @@ jobs:
           -H "Content-Type: application/json" \
           -d "{\"pr_id\": \"${{ github.event.pull_request.number }}\",
            \"pr_branch\": \"${{ github.event.pull_request.head.ref }}\",
-            \"pr_comment\": \'${{ github.event.review.body }}\'}"
+            \"pr_comment\": \'${{ github.event.pull_request.body }}\'}"
