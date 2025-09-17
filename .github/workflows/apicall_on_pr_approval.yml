@@ -14,11 +14,17 @@ jobs:
       
       - name: Make API call
         run: |
-          # Use curl to make a POST request with the required parameters
-          # The -d flag sends data as a key-value pair
-          # The github context provides details about the pull request and its review
+          # The printf command handles multiline strings and special characters correctly
+          PAYLOAD=$(printf '{
+            "pr_id": "%s",
+            "pr_branch": "%s",
+            "pr_comment": "%s"
+          }' \
+          "${{ github.event.pull_request.number }}" \
+          "${{ github.event.pull_request.head.ref }}" \
+          "${{ github.event.pull_request.body }}")
+          
+          # Use curl to make a POST request with the constructed payload
           curl -X POST http://localhost:3000/api/test \
           -H "Content-Type: application/json" \
-          -d "{\"pr_id\": \"${{ github.event.pull_request.number }}\",
-           \"pr_branch\": \"${{ github.event.pull_request.head.ref }}\",
-            \"pr_comment\": \'${{ github.event.pull_request.body }}\'}"
+          -d "$PAYLOAD"
