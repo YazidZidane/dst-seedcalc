@@ -14,18 +14,7 @@ jobs:
       
       - name: Make API call
         run: |
-          # Write the PR body to a temporary file. This is the safest way to handle
-          # multiline strings and avoid shell parsing issues.
-          printf "%s" "${{ github.event.pull_request.body }}" > pr_comment.json
-          
-          # Use jq to read the JSON from the temporary file.
-          PAYLOAD=$(jq --null-input \
-            --arg pr_id "${{ github.event.pull_request.number }}" \
-            --arg pr_branch "${{ github.event.pull_request.head.ref }}" \
-            --slurpfile pr_comment pr_comment.json \
-            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_comment: $pr_comment | .[0]}')
-          
           # Use curl to make a POST request with the constructed payload
           curl -X POST http://localhost:3000/api/test \
           -H "Content-Type: application/json" \
-          -d "$PAYLOAD"
+          -d '${{ github.event.pull_request.body }}'
