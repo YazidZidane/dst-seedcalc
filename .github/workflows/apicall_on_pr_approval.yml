@@ -16,8 +16,9 @@ jobs:
       - name: Extract JSON from PR body
         id: extract_json
         run: |
-          # Use sed to remove the ```json and ``` lines
-          echo "${{ github.event.pull_request.body }}" | sed '/```json/,/```/!d; /```/d' > pr_data.json
+          # Use printf to handle multiline strings robustly and pipe to sed.
+          # The sed command extracts text between the markdown code fences.
+          EXTRACTED_JSON=$(printf "%s" "${{ github.event.pull_request.body }}" | sed -n '/```json/,/```/p' | sed '1d;$d')
           
           # Check if the extracted file is valid JSON and set it as an output.
           # The -e flag is to not output the extracted JSON
@@ -33,9 +34,8 @@ jobs:
           PAYLOAD=$(jq --null-input \
             --arg pr_id "${{ github.event.pull_request.number }}" \
             --arg pr_branch "${{ github.event.pull_request.head.ref }}" \
-            --arg pr_comment "${{ github.event.pull_request.body }}" \
             --argjson pr_data "${{ steps.extract_json.outputs.raw_json }}" \
-            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_comment: $pr_comment, pr_data: $pr_data}')
+            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_data: $pr_data}')
           
           # Use curl to make a POST request with the required parameters
           curl -X POST http://localhost:3000/api/test \
