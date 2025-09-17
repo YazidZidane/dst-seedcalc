@@ -12,11 +12,32 @@ jobs:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
+      # Step to extract the raw JSON from the pull request body's code block
+      - name: Extract JSON from PR body
+        id: extract_json
+        run: |
+          # Use sed to remove the ```json and ``` lines
+          echo "${{ github.event.pull_request.body }}" | sed '/```json/,/```/!d; /```/d' > pr_data.json
+          
+          # Check if the extracted file is valid JSON and set it as an output.
+          # The -e flag is to not output the extracted JSON
+          if jq -e . pr_data.json > /dev/null; then
+              echo "raw_json=$(<pr_data.json)" >> "$GITHUB_OUTPUT"
+          else
+              echo "raw_json={}" >> "$GITHUB_OUTPUT"
+          fi
+      
       - name: Make API call
         run: |
+          # Construct the full JSON payload using jq for safety and robustness
+          PAYLOAD=$(jq --null-input \
+            --arg pr_id "${{ github.event.pull_request.number }}" \
+            --arg pr_branch "${{ github.event.pull_request.head.ref }}" \
+            --arg pr_comment "${{ github.event.pull_request.body }}" \
+            --argjson pr_data "${{ steps.extract_json.outputs.raw_json }}" \
+            '{pr_id: $pr_id, pr_branch: $pr_branch, pr_comment: $pr_comment, pr_data: $pr_data}')
+          
           # Use curl to make a POST request with the required parameters
-          # The -d flag sends data as a key-value pair
-          # The github context provides details about the pull request and its review
           curl -X POST http://localhost:3000/api/test \
           -H "Content-Type: application/json" \
-          -d "{\"pr_id\": \"${{ github.event.pull_request.number }}\", \"pr_branch\": \"${{ github.event.pull_request.head.ref }}\", \"pr_comment\": \"${{ github.event.pull_request.body }}\"}"
+          -d "$PAYLOAD"
