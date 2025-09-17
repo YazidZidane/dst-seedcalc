@@ -16,21 +16,18 @@ jobs:
       - name: Extract JSON from PR body
         id: extract_json
         run: |
-          # Use a here string to pass the multiline PR body to a pipeline.
-          # sed extracts the text within the markdown code block.
-          EXTRACTED_JSON=$(sed -n '/```json/,/```/p' <<< "${{ github.event.pull_request.body }}" | sed '1d;$d')
+          # We assume the PR body is a raw JSON string without markdown fences.
+          PR_BODY="${{ github.event.pull_request.body }}"
           
           # Check if the extracted content is valid JSON.
-          if [ -z "$EXTRACTED_JSON" ]; then
+          if [ -z "$PR_BODY" ]; then
               echo "No JSON found in PR body. Using empty object."
               echo "raw_json={}" >> "$GITHUB_OUTPUT"
-          elif echo "$EXTRACTED_JSON" | jq -e . > /dev/null; then
+          elif echo "$PR_BODY" | jq -e . > /dev/null; then
               echo "JSON successfully extracted and validated."
               # Set the validated JSON as an output variable.
-              # We use a unique string as a delimiter to handle multiline JSON.
-              JSON_OUTPUT=$(echo "$EXTRACTED_JSON")
               echo "raw_json<<EOF" >> "$GITHUB_OUTPUT"
-              echo "$JSON_OUTPUT" >> "$GITHUB_OUTPUT"
+              echo "$PR_BODY" >> "$GITHUB_OUTPUT"
               echo "EOF" >> "$GITHUB_OUTPUT"
           else
               echo "Error: Extracted content is not valid JSON. Using empty object."
