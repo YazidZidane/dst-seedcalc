@@ -25,10 +25,8 @@ jobs:
               echo "raw_json={}" >> "$GITHUB_OUTPUT"
           elif echo "$PR_BODY" | jq -e . > /dev/null; then
               echo "JSON successfully extracted and validated."
-              # Set the validated JSON as an output variable.
-              echo "raw_json<<EOF" >> "$GITHUB_OUTPUT"
-              echo "$PR_BODY" >> "$GITHUB_OUTPUT"
-              echo "EOF" >> "$GITHUB_OUTPUT"
+              # Set the validated JSON as an output variable without delimiters.
+              echo "raw_json=$PR_BODY" >> "$GITHUB_OUTPUT"
           else
               echo "Error: Extracted content is not valid JSON. Using empty object."
               echo "raw_json={}" >> "$GITHUB_OUTPUT"
