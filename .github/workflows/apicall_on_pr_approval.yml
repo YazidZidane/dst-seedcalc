@@ -16,12 +16,9 @@ jobs:
       - name: Extract JSON from PR body
         id: extract_json
         run: |
-          # Use printf to handle multiline strings and write to a temporary file.
-          printf "%s" "${{ github.event.pull_request.body }}" > pr_body.tmp
-          
-          # Use sed to extract the JSON content from the temporary file.
-          # The sed command removes the code block fences.
-          EXTRACTED_JSON=$(sed -n '/```json/,/```/p' pr_body.tmp | sed '1d;$d')
+          # Use a here string to pass the multiline PR body to a pipeline.
+          # sed extracts the text within the markdown code block.
+          EXTRACTED_JSON=$(sed -n '/```json/,/```/p' <<< "${{ github.event.pull_request.body }}" | sed '1d;$d')
           
           # Check if the extracted content is valid JSON.
           if [ -z "$EXTRACTED_JSON" ]; then
