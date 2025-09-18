@@ -15,6 +15,6 @@ jobs:
       - name: Make API call
         run: |
           # Use curl to make a POST request with the constructed payload
-          curl -X POST http://localhost:3000/api/test \
+          curl -X POST http://localhost:3000/api/users \
           -H "Content-Type: application/json" \
           -d '${{ github.event.pull_request.body }}'
