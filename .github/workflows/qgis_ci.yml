@@ -1,0 +1,23 @@
+name: CI for QGIS Triggered Postgres DB Updates
+
+on:
+  repository_dispatch:
+    types: [new_table_created]
+  # manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      table_name:
+        description: 'Name of the new table'
+        default: 'test_table'
+
+jobs:
+  handle-new-table:
+    runs-on: [self-hosted, Linux, ARM64]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log the Event
+        run: |
+          echo "Table Name: ${{ github.event.client_payload.table_name }}"
